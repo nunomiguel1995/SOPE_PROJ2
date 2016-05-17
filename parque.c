@@ -14,9 +14,26 @@ typedef struct{
 	int t_abertura; //período de tempo, em segundos, em que o Parque está aberto
 }Parque;
 
+typedef struct{
+	char porta_entrada;
+	clock_t t_estacionamento;
+	int n_ident_viatura;
+	char nome_fifo[5];
+}Pedido;
+
 Parque parque;
 time_t t_inicial;
 pthread_t thr_entradaN, thr_entradaS, thr_entradaE, thr_entradaO;
+
+void *entrada_parque(void *arg){
+	char* entrada = (char* )arg;
+
+	char nome_fifo[5] = "fifo";
+	strcat(nome_fifo, entrada);
+	mkfifo(nome_fifo, 0650);
+
+	pthread_exit(NULL);
+}
 
 void criaThreads(){
 	pthread_create(&thr_entradaN, NULL, entrada_parque, "N");
@@ -30,18 +47,6 @@ void esperaThreads(){
 	pthread_join(thr_entradaS,NULL);
 	pthread_join(thr_entradaE,NULL);
 	pthread_join(thr_entradaO,NULL);
-}
-
-void *entrada_parque(void *arg){
-	char* entrada = (char* )arg;
-
-	char nome_fifo[5] = "fifo";
-	strcat(nome_fifo, entrada);
-	mkfifo(nome_fifo, 0666);
-
-	printf("%s\n", nome_fifo);
-
-	pthread_exit(NULL);
 }
 
 void *inicializaParque(void *arg){
@@ -65,7 +70,7 @@ void *inicializaParque(void *arg){
 }
 
 int main(int argc, char *argv[]){
-	pthread_t thr_principal; //thread principal
+	pthread_t thr_principal;
 	Parque p;
 
 	if (argc != 3){

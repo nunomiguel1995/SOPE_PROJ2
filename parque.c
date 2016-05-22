@@ -5,6 +5,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <errno.h>
@@ -19,77 +20,173 @@
 #define FIFO_SUL	"fifoS"
 #define FIFO_ESTE	"fifoE"
 #define FIFO_OESTE	"fifoO"
+#define TAMANHO_NOME_FIFO	5
 
 typedef struct{
 	int n_lugares; //lotação
 	int t_abertura; //período de tempo, em segundos, em que o Parque está aberto
+	int aberto; //controlador de abertura de parque
 }Parque;
 
-pthread_mutex_t thr_principal = PTHREAD_MUTEX_INITIALIZER;
+typedef struct{
+	char *direcao;
+	int id;
+	int t_estacionamento;
+	char nome_fifo[TAMANHO_NOME_FIFO];
+}Veiculo;
+
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_t thr_Norte, thr_Sul, thr_Este, thr_Oeste;
 Parque parque;
 
-void *entradaParque(void *arg){
-	char* entrada = (char* )arg;
+void *entradaParqueNorte(void *arg){
+	mkfifo(FIFO_NORTE, 0650);
+	int fifo, openF = 1, readF;
+	Veiculo v;
 
-	if(strcmp(entrada,"N") == 0){
-		mkfifo(FIFO_NORTE, 0650);
-	}else if(strcmp(entrada,"S") == 0){
-		mkfifo(FIFO_SUL, 0650);
-	}else if(strcmp(entrada,"E") == 0){
-		mkfifo(FIFO_ESTE, 0650);
-	}else if(strcmp(entrada,"O") == 0){
-		mkfifo(FIFO_OESTE, 0650);
+	fifo = open(FIFO_NORTE, O_RDONLY | O_NONBLOCK);
+
+	while(openF){
+		readF = read(fifo, &v, sizeof(Veiculo));
+		if(v.id == -1){
+			openF = 0;
+		}else if(readF > 0){
+			printf("%2d %6s %9d\n", v.id, "Norte", v.t_estacionamento);
+		}
 	}
+
+	printf("Entrada Norte fechou.\n");
+	close(fifo);
 
 	pthread_exit(NULL);
 }
 
-int criarControladores(){
+void *entradaParqueSul(void *arg){
+	mkfifo(FIFO_SUL, 0650);
+	int fifo, openF = 1, readF;
+	Veiculo v;
 
-	if(pthread_create(&thr_Norte, NULL, entradaParque, "N") != 0){
-		perror("Erro ao criar o controlador da entrada Norte.\n");
-		exit(1);
-	}
-	if(pthread_create(&thr_Sul, NULL, entradaParque, "S") != 0){
-		perror("Erro ao criar o controlador da entrada Sul.\n");
-		exit(1);
-	}
-	if(pthread_create(&thr_Este, NULL, entradaParque, "E") != 0){
-		perror("Erro ao criar o controlador da entrada Este.\n");
-		exit(1);
-	}
-	if(pthread_create(&thr_Oeste, NULL, entradaParque, "O") != 0){
-		perror("Erro ao criar o controlador da entrada Oeste.\n");
-		exit(1);
+	fifo = open(FIFO_SUL, O_RDONLY | O_NONBLOCK);
+
+	while(openF){
+		readF = read(fifo, &v, sizeof(Veiculo));
+		if(v.id == -1){
+			openF = 0;
+		}else if(readF > 0){
+			printf("%2d %6s %9d\n", v.id, "Sul", v.t_estacionamento);
+		}
 	}
 
+	printf("Entrada Sul fechou.\n");
+	close(fifo);
+
+	pthread_exit(NULL);
+}
+
+void *entradaParqueEste(void *arg){
+	mkfifo(FIFO_ESTE, 0650);
+	int fifo, openF = 1, readF;
+	Veiculo v;
+
+	fifo = open(FIFO_ESTE, O_RDONLY | O_NONBLOCK);
+
+	while(openF){
+		readF = read(fifo, &v, sizeof(Veiculo));
+		if(v.id == -1){
+			openF = 0;
+		}else if(readF > 0){
+			printf("%2d %6s %9d\n", v.id, "Este", v.t_estacionamento);
+		}
+	}
+
+	printf("Entrada Este fechou.\n");
+	close(fifo);
+
+	pthread_exit(NULL);
+}
+
+void *entradaParqueOeste(void *arg){
+	mkfifo(FIFO_OESTE, 0650);
+	int fifo, openF = 1, readF;
+	Veiculo v;
+
+	fifo = open(FIFO_OESTE, O_RDONLY | O_NONBLOCK);
+
+	while(openF){
+		readF = read(fifo, &v, sizeof(Veiculo));
+		if(v.id == -1){
+			openF = 0;
+		}else if(readF > 0){
+			printf("%2d %6s %9d\n", v.id, "Oeste", v.t_estacionamento);
+		}
+	}
+
+	printf("Entrada Oeste fechou.\n");
+	close(fifo);
+
+	pthread_exit(NULL);
+}
+
+void *criarControladores(void *arg){
+	pthread_create(&thr_Norte, NULL, entradaParqueNorte, NULL);
+	pthread_create(&thr_Sul, NULL, entradaParqueSul, NULL);
+	pthread_create(&thr_Este, NULL, entradaParqueEste, NULL);
+	pthread_create(&thr_Oeste, NULL, entradaParqueOeste, NULL);
+
+	pthread_exit(NULL);
+}
+
+void enviaUltimoVeiculo(){
+	int fifoN, fifoS, fifoE, fifoO;
+	Veiculo v;
+	v.id = -1;
+
+	fifoN = open(FIFO_NORTE, O_WRONLY);
+	fifoS = open(FIFO_SUL, O_WRONLY);
+	fifoE = open(FIFO_ESTE, O_WRONLY);
+	fifoO = open(FIFO_OESTE, O_WRONLY);
+
+	write(fifoN, &v, sizeof(Veiculo));
+	write(fifoS, &v, sizeof(Veiculo));
+	write(fifoE, &v, sizeof(Veiculo));
+	write(fifoO, &v, sizeof(Veiculo));
+}
+
+void fechaControladores(){
 	pthread_join(thr_Norte, NULL);
 	pthread_join(thr_Sul, NULL);
 	pthread_join(thr_Este, NULL);
 	pthread_join(thr_Oeste, NULL);
+}
 
-	exit(0);
+void apagaFifos(){
+	unlink(FIFO_NORTE);
+	unlink(FIFO_SUL);
+	unlink(FIFO_ESTE);
+	unlink(FIFO_OESTE);
 }
 
 int main(int argc, char *argv[]){
+	pthread_t thr_principal;
+
 	if(argc != 3){
 		perror("Numero errado de argumentos. Utilize ./parque <N_LUGARES> <T_ABERTURA>\n");
 		exit(1);
 	}
 	parque.n_lugares = atoi(argv[1]);
 	parque.t_abertura = atoi(argv[2]);
+	parque.aberto = 1;
 
-	if(criarControladores() == 1){
-		exit(1);
-	}
+	pthread_create(&thr_principal, NULL, criarControladores, NULL);
+	//pthread_join(thr_principal, NULL);
 
 	sleep(parque.t_abertura);
+	parque.aberto = 0;
 
-	/*remove(FIFO_NORTE);
-	remove(FIFO_SUL);
-	remove(FIFO_ESTE);
-	remove(FIFO_OESTE);*/
+	enviaUltimoVeiculo();
+	fechaControladores();
+
+	apagaFifos();
 
 	exit(0);
 }

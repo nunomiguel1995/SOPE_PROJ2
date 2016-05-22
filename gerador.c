@@ -34,12 +34,16 @@ typedef struct{
 void *enviaVeiculo(void *veiculo){
 	pthread_mutex_lock(&thr_principal);
 	Veiculo *v = (Veiculo *)veiculo;
+	int fifo;
 
-	printf("%2d %6s %9d %9s\n", v->id, v->direcao, v->t_estacionamento, v->nome_fifo);
+	//printf("%2d %6s %9d %9s\n", v->id, v->direcao, v->t_estacionamento, v->nome_fifo);
+	fifo = open(v->nome_fifo, O_WRONLY);
+	write(fifo, v, sizeof(Veiculo));
 
+	close(fifo);
 
 	pthread_mutex_unlock(&thr_principal);
-	return NULL;
+	pthread_exit(NULL);
 }
 
 char* gerarEntrada(){
@@ -97,7 +101,6 @@ int main(int argc, char *argv[]){
 		exit(1);
 	}
 
-	printf("%s %9s %9s %4s\n", "ID", "DIRECAO", "T_ESTACION", "FIFO");
 	int t_geracao = atoi(argv[1]);
 	int u_relogio = atoi(argv[2]);
 	int intervalo = 0;

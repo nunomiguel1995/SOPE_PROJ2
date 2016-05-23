@@ -15,34 +15,42 @@
 #include <sys/stat.h>
 #include <sys/file.h>
 
-#define TAMANHO_NOME_FIFO	5
-#define FIFO_NORTE	"fifoN"
-#define FIFO_SUL	"fifoS"
-#define FIFO_ESTE	"fifoE"
-#define FIFO_OESTE	"fifoO"
+#define TAMANHO_NOME_FIFO		5
+#define TAMANHO_FIFO_PRIVADO 	1000
+#define FIFO_NORTE				"/temp/fifoN"
+#define FIFO_SUL				"/temp/fifoS"
+#define FIFO_ESTE				"/temp/fifoE"
+#define FIFO_OESTE				"/temp/fifoO"
 
-pthread_mutex_t thr_principal = PTHREAD_MUTEX_INITIALIZER;
-int id_veiculo = 1;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+int id_veiculo = 1, ticks = 0;
+FILE *log_gerador;
+
+typedef enum {ENTRA, SAI, CHEIO} EstadoParque;
 
 typedef struct{
 	char *direcao;
 	int id;
 	int t_estacionamento;
-	char nome_fifo[TAMANHO_NOME_FIFO];
+	char fifo_entrada[TAMANHO_NOME_FIFO];
+	char fifo_privado[TAMANHO_FIFO_PRIVADO];
 }Veiculo;
 
 void *enviaVeiculo(void *veiculo){
-	pthread_mutex_lock(&thr_principal);
 	Veiculo *v = (Veiculo *)veiculo;
-	int fifo;
+	int fifo, fifoPrivado;
+	char *estadoParque = malloc(sizeof(char));
 
-	//printf("%2d %6s %9d %9s\n", v->id, v->direcao, v->t_estacionamento, v->nome_fifo);
-	fifo = open(v->nome_fifo, O_WRONLY);
+	fifo = open(v->fifo_entrada, O_WRONLY);
 	write(fifo, v, sizeof(Veiculo));
+
+	fifoPrivado = open(v->fifo_privado, O_RDONLY);
+	//read(fifo, estadoParque, sizeof(estadoParque));
+
+	fprintf(log_gerador, "%5d    ;  %4d   ; %4s   ; %6d     ; %4d   ;  \n", ticks, v->id, v->direcao, v->t_estacionamento, 0);
 
 	close(fifo);
 
-	pthread_mutex_unlock(&thr_principal);
 	pthread_exit(NULL);
 }
 
@@ -75,21 +83,24 @@ int gerarIntervaloViaturas(int relogio){
 int gerarVeiculo(int relogio){
 	pthread_t thr_enviaVeiculo;
 	Veiculo *v = (Veiculo *)malloc(sizeof(Veiculo));
+	int intervalo;
 
 	v->id = id_veiculo;
+	id_veiculo++;
 	v->direcao = gerarEntrada();
 
-	strcpy(v->nome_fifo, "fifo");
-	strcat(v->nome_fifo, v->direcao);
+	strcpy(v->fifo_entrada, "fifo");
+	strcat(v->fifo_entrada, v->direcao);
 	v->t_estacionamento = gerarTempoEstacionamento(relogio);
-
-	id_veiculo = id_veiculo + 1;
+	sprintf(v->fifo_privado, "%s%d", "viatura",v->id);
 
 	pthread_create(&thr_enviaVeiculo, NULL, enviaVeiculo, v);
-	pthread_join(thr_enviaVeiculo, NULL);
+	pthread_detach(thr_enviaVeiculo);
 
+	intervalo = gerarIntervaloViaturas(relogio);
+	ticks += intervalo;
 
-	return gerarIntervaloViaturas(relogio);
+	return intervalo;
 }
 
 int main(int argc, char *argv[]){
@@ -105,6 +116,9 @@ int main(int argc, char *argv[]){
 	int u_relogio = atoi(argv[2]);
 	int intervalo = 0;
 
+	log_gerador = fopen("gerador.log", "w");
+	fprintf(log_gerador, "t(ticks) ; id_viat ; destin ; t_estacion ; t_vida ; observ\n");
+
 	do{
 		time(&t_atual);
 
@@ -113,13 +127,10 @@ int main(int argc, char *argv[]){
 		}else {
 			intervalo--;
 		}
-
 		usleep(u_relogio * pow(10,3));
 	}while(difftime(t_atual, t_inicial) < t_geracao);
 
-	Veiculo *v = (Veiculo *)malloc(sizeof(Veiculo));
-	v->id = -1;
+	fclose(log_gerador);
 
-	pthread_exit(NULL);
 	exit(0);
 }

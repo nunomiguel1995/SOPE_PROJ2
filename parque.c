@@ -21,6 +21,9 @@
 #define FIFO_ESTE	"fifoE"
 #define FIFO_OESTE	"fifoO"
 #define TAMANHO_NOME_FIFO	5
+#define TAMANHO_FIFO_PRIVADO 	1000
+
+typedef enum {ENTRA, SAI, CHEIO} EstadoParque;
 
 typedef struct{
 	int n_lugares; //lotação
@@ -33,11 +36,34 @@ typedef struct{
 	int id;
 	int t_estacionamento;
 	char nome_fifo[TAMANHO_NOME_FIFO];
+	char fifo_privado[TAMANHO_FIFO_PRIVADO];
 }Veiculo;
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_t thr_Norte, thr_Sul, thr_Este, thr_Oeste;
 Parque parque;
+int numVagasParque;
+FILE *log_parque;
+
+void *arrumador(void *veiculo){
+
+	Veiculo *v = (Veiculo *)veiculo;
+	int fifoVeiculo;
+
+	fifoVeiculo = open(v->fifo_privado, O_WRONLY);
+
+	//pthread_mutex_lock(&mutex);
+
+	if(numVagasParque > 0 && parque.aberto){
+		EstadoParque estado = ENTRA;
+		numVagasParque--;
+		write(fifoVeiculo, &estado, sizeof(EstadoParque));
+	}
+
+	//pthread_mutex_unlock(&mutex);
+
+	pthread_exit(NULL);
+}
 
 void *entradaParqueNorte(void *arg){
 	mkfifo(FIFO_NORTE, 0650);
@@ -133,7 +159,7 @@ void *criarControladores(void *arg){
 	pthread_create(&thr_Este, NULL, entradaParqueEste, NULL);
 	pthread_create(&thr_Oeste, NULL, entradaParqueOeste, NULL);
 
-	pthread_exit(NULL);
+	return NULL;
 }
 
 void enviaUltimoVeiculo(){
@@ -178,7 +204,6 @@ int main(int argc, char *argv[]){
 	parque.aberto = 1;
 
 	pthread_create(&thr_principal, NULL, criarControladores, NULL);
-	//pthread_join(thr_principal, NULL);
 
 	sleep(parque.t_abertura);
 	parque.aberto = 0;

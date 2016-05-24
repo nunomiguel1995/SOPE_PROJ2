@@ -1,14 +1,133 @@
 t(ticks) ; id_viat ; destin ; t_estacion ; t_vida ; observ
-   20    ;     1   ;    O   ;     30     ;    0   ;  
-   40    ;     2   ;    N   ;     90     ;    0   ;  
-   40    ;     3   ;    S   ;     70     ;    0   ;  
-   60    ;     4   ;    O   ;     30     ;    0   ;  
-   80    ;     5   ;    O   ;     40     ;    0   ;  
-   90    ;     6   ;    O   ;     40     ;    0   ;  
-  110    ;     7   ;    E   ;     50     ;    0   ;  
-  120    ;     8   ;    N   ;    100     ;    0   ;  
-  120    ;     9   ;    O   ;     30     ;    0   ;  
-  130    ;    10   ;    S   ;     60     ;    0   ;  
-  150    ;    11   ;    E   ;     70     ;    0   ;  
-  170    ;    12   ;    S   ;     40     ;    0   ;  
-  180    ;    13   ;    N   ;     70     ;    0   ;  
+    0    ;     1   ;    E   ;     80     ;    ?   ;  estacionamento
+   80    ;     1   ;    E   ;     80     ;   90   ;  saída
+   10    ;     2   ;    E   ;     30     ;    ?   ;  estacionamento
+   40    ;     2   ;    E   ;     30     ;   40   ;  saída
+   20    ;     3   ;    E   ;     10     ;    ?   ;  estacionamento
+   30    ;     3   ;    E   ;     10     ;   20   ;  saída
+   30    ;     4   ;    E   ;     50     ;    ?   ;  estacionamento
+   80    ;     4   ;    E   ;     50     ;   60   ;  saída
+   40    ;     5   ;    E   ;     50     ;    ?   ;  estacionamento
+   90    ;     5   ;    E   ;     50     ;   70   ;  saída
+   60    ;     6   ;    E   ;     10     ;    ?   ;  estacionamento
+   70    ;     6   ;    E   ;     10     ;   20   ;  saída
+   70    ;     7   ;    N   ;     20     ;    ?   ;  estacionamento
+   90    ;     7   ;    N   ;     20     ;   30   ;  saída
+   80    ;     8   ;    N   ;     50     ;    ?   ;  estacionamento
+  130    ;     8   ;    N   ;     50     ;   70   ;  saída
+  100    ;     9   ;    S   ;     50     ;    ?   ;  estacionamento
+  150    ;     9   ;    S   ;     50     ;   70   ;  saída
+  120    ;    10   ;    E   ;     20     ;    ?   ;  estacionamento
+  140    ;    10   ;    E   ;     20     ;   40   ;  saída
+  140    ;    11   ;    S   ;     40     ;    ?   ;  estacionamento
+  180    ;    11   ;    S   ;     40     ;   50   ;  saída
+  150    ;    12   ;    S   ;     20     ;    ?   ;  estacionamento
+  150    ;    13   ;    O   ;    100     ;    ?   ;  estacionamento
+  170    ;    12   ;    S   ;     20     ;   30   ;  saída
+  150    ;    14   ;    O   ;     10     ;    ?   ;  estacionamento
+  160    ;    14   ;    O   ;     10     ;   20   ;  saída
+  250    ;    13   ;    O   ;    100     ;  110   ;  saída
+  160    ;    15   ;    S   ;     10     ;    ?   ;  estacionamento
+  170    ;    15   ;    S   ;     10     ;   30   ;  saída
+  160    ;    16   ;    S   ;    100     ;    ?   ;  estacionamento
+  160    ;    17   ;    S   ;     80     ;    ?   ;  estacionamento
+  240    ;    17   ;    S   ;     80     ;  100   ;  saída
+  260    ;    16   ;    S   ;    100     ;  120   ;  saída
+  180    ;    18   ;    S   ;     60     ;    ?   ;  estacionamento
+  180    ;    19   ;    E   ;    100     ;    ?   ;  estacionamento
+  240    ;    18   ;    S   ;     60     ;   80   ;  saída
+  280    ;    19   ;    E   ;    100     ;  120   ;  saída
+  200    ;    20   ;    O   ;     20     ;    ?   ;  estacionamento
+  200    ;    21   ;    N   ;     40     ;    ?   ;  estacionamento
+  220    ;    20   ;    O   ;     20     ;   30   ;  saída
+  240    ;    21   ;    N   ;     40     ;   50   ;  saída
+  210    ;    22   ;    O   ;     30     ;    ?   ;  estacionamento
+  240    ;    22   ;    O   ;     30     ;   50   ;  saída
+  230    ;    23   ;    N   ;    100     ;    ?   ;  estacionamento
+  230    ;    24   ;    O   ;     60     ;    ?   ;  estacionamento
+  230    ;    25   ;    O   ;     10     ;    ?   ;  estacionamento
+  240    ;    25   ;    O   ;     10     ;   10   ;  saída
+  230    ;    26   ;    O   ;     40     ;    ?   ;  estacionamento
+  230    ;    27   ;    S   ;     50     ;    ?   ;  estacionamento
+  230    ;    28   ;    O   ;    100     ;    ?   ;  estacionamento
+  290    ;    24   ;    O   ;     60     ;   80   ;  saída
+  270    ;    26   ;    O   ;     40     ;   60   ;  saída
+  280    ;    27   ;    S   ;     50     ;   70   ;  saída
+  330    ;    23   ;    N   ;    100     ;  120   ;  saída
+  330    ;    28   ;    O   ;    100     ;  120   ;  saída
+  250    ;    29   ;    E   ;     70     ;    ?   ;  estacionamento
+  320    ;    29   ;    E   ;     70     ;   80   ;  saída
+  260    ;    30   ;    N   ;     40     ;    ?   ;  estacionamento
+  260    ;    31   ;    N   ;    100     ;    ?   ;  estacionamento
+  260    ;    32   ;    O   ;     50     ;    ?   ;  estacionamento
+  300    ;    30   ;    N   ;     40     ;   50   ;  saída
+  310    ;    32   ;    O   ;     50     ;   60   ;  saída
+  360    ;    31   ;    N   ;    100     ;  110   ;  saída
+  270    ;    33   ;    O   ;     10     ;    ?   ;  estacionamento
+  280    ;    33   ;    O   ;     10     ;   30   ;  saída
+  290    ;    34   ;    O   ;     10     ;    ?   ;  estacionamento
+  300    ;    34   ;    O   ;     10     ;   20   ;  saída
+  300    ;    35   ;    S   ;    100     ;    ?   ;  estacionamento
+  400    ;    35   ;    S   ;    100     ;  110   ;  saída
+  310    ;    36   ;    N   ;     10     ;    ?   ;  estacionamento
+  320    ;    36   ;    N   ;     10     ;   20   ;  saída
+  310    ;    37   ;    S   ;     60     ;    ?   ;  estacionamento
+  370    ;    37   ;    S   ;     60     ;   70   ;  saída
+  320    ;    38   ;    E   ;     20     ;    ?   ;  estacionamento
+  340    ;    38   ;    E   ;     20     ;   30   ;  saída
+  330    ;    39   ;    O   ;     20     ;    ?   ;  estacionamento
+  330    ;    40   ;    N   ;     20     ;    ?   ;  estacionamento
+  350    ;    39   ;    O   ;     20     ;   40   ;  saída
+  350    ;    40   ;    N   ;     20     ;   40   ;  saída
+  350    ;    41   ;    S   ;     20     ;    ?   ;  encerrado
+  350    ;    42   ;    O   ;     10     ;    ?   ;  encerrado
+  350    ;    43   ;    N   ;     90     ;    ?   ;  encerrado
+  360    ;    44   ;    E   ;    100     ;    ?   ;  encerrado
+  370    ;    45   ;    S   ;     20     ;    ?   ;  encerrado
+cerrado
+  190    ;    47   ;    S   ;     10     ;    ?   ;  encerrado
+  190    ;    48   ;    E   ;     30     ;    ?   ;  encerrado
+  210    ;    49   ;    N   ;     80     ;    ?   ;  encerrado
+  220    ;    50   ;    N   ;     20     ;    ?   ;  encerrado
+  220    ;    51   ;    E   ;     60     ;    ?   ;  encerrado
+  220    ;    52   ;    N   ;     50     ;    ?   ;  encerrado
+  220    ;    53   ;    N   ;     90     ;    ?   ;  encerrado
+  220    ;    54   ;    N   ;     80     ;    ?   ;  encerrado
+  240    ;    55   ;    S   ;     30     ;    ?   ;  encerrado
+  260    ;    56   ;    O   ;     70     ;    ?   ;  encerrado
+  260    ;    57   ;    N   ;     60     ;    ?   ;  encerrado
+  270    ;    58   ;    O   ;     70     ;    ?   ;  encerrado
+  290    ;    59   ;    O   ;     10     ;    ?   ;  encerrado
+  310    ;    60   ;    O   ;     40     ;    ?   ;  encerrado
+  310    ;    61   ;    S   ;    100     ;    ?   ;  encerrado
+  330    ;    62   ;    N   ;     40     ;    ?   ;  encerrado
+  330    ;    63   ;    O   ;     50     ;    ?   ;  encerrado
+  330    ;    64   ;    E   ;     50     ;    ?   ;  encerrado
+  330    ;    65   ;    N   ;    100     ;    ?   ;  encerrado
+  330    ;    66   ;    N   ;     30     ;    ?   ;  encerrado
+  330    ;    67   ;    N   ;     50     ;    ?   ;  encerrado
+  340    ;    68   ;    E   ;     30     ;    ?   ;  encerrado
+  350    ;    69   ;    S   ;     60     ;    ?   ;  encerrado
+  360    ;    70   ;    O   ;     10     ;    ?   ;  encerrado
+  360    ;    71   ;    O   ;     10     ;    ?   ;  encerrado
+  360    ;    72   ;    O   ;     10     ;    ?   ;  encerrado
+  370    ;    73   ;    E   ;     80     ;    ?   ;  encerrado
+  370    ;    74   ;    N   ;     60     ;    ?   ;  encerrado
+
+  320    ;    55   ;    O   ;     20     ;    ?   ;  estacionamento
+  320    ;    55   ;    O   ;     20     ;    ?   ;  estacionamento
+  320    ;    56   ;    S   ;     40     ;    ?   ;  estacionamento
+  320    ;    56   ;    S   ;     40     ;    ?   ;  estacionamento
+  320    ;    57   ;    E   ;     30     ;    ?   ;  estacionamento
+  320    ;    57   ;    E   ;     30     ;    ?   ;  estacionamento
+  330    ;    58   ;    O   ;     40     ;    ?   ;  encerrado
+  350    ;    59   ;    S   ;     80     ;    ?   ;  encerrado
+   ;    ?   ;  encerrado
+  330    ;    64   ;    O   ;    100     ;    ?   ;  encerrado
+  330    ;    65   ;    E   ;     10     ;    ?   ;  encerrado
+  350    ;    66   ;    E   ;     90     ;    ?   ;  encerrado
+  350    ;    67   ;    O   ;     90     ;    ?   ;  encerrado
+  360    ;    68   ;    O   ;     20     ;    ?   ;  encerrado
+  360    ;    69   ;    N   ;    100     ;    ?   ;  encerrado
+  370    ;    70   ;    E   ;     30     ;    ?   ;  encerrado
+  370    ;    71   ;    N   ;     90     ;    ?   ;  encerrado

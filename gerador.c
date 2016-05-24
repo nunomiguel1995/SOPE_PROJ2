@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <semaphore.h>
 #include <errno.h>
 #include <time.h>
 #include <math.h>
@@ -74,7 +73,9 @@ void escreveLog(Veiculo *v, int estado){
 		sprintf(buffer,"%5d    ;  %4d   ; %4c   ; %6d     ;    ?   ;  %s\n", v->ticks_criacao, v->id, v->direcao, v->t_estacionamento, bufferEstado);
 	}
 
-	write(log_gerador, buffer, strlen(buffer));
+	if(write(log_gerador, buffer, strlen(buffer)) == -1){
+		perror("write:: Erro ao escrever no gerador.log\n");
+	}
 	strcpy(buffer, "");
 	strcpy(bufferEstado, "");
 }
@@ -91,23 +92,24 @@ void *enviaVeiculo(void *veiculo){
 	fifoEscreve = open(v.fifo_entrada, O_WRONLY | O_NONBLOCK);
 
 	if(fifoEscreve != -1){
-		write(fifoEscreve, &v, sizeof(Veiculo));
+		if(write(fifoEscreve, &v, sizeof(Veiculo)) == -1){
+			perror("write:: Erro ao escrever para o controlador.\n");
+		}
 		close(fifoEscreve);
 
 		fifoLe = open(v.fifo_viatura, O_RDONLY);
 		if(fifoLe != -1){
-			read(fifoLe, &estado, sizeof(int));
-
-			if(pthread_mutex_lock(&mutex) == -1){
-				perror("mutex_lock::Erro ao trancar mutex.\n");
-			}else{
-				escreveLog(&v, estado);
-			}
-			if(pthread_mutex_unlock(&mutex) == -1){
-				perror("mutex_unlock::Erro ao destrancar mutex.\n");
+			if(read(fifoLe, &estado, sizeof(int)) == -1){
+				perror("read:: Erro ao ler do arrumador.\n");
 			}
 
-			read(fifoLe, &estado, sizeof(int));
+			pthread_mutex_lock(&mutex);
+			escreveLog(&v, estado);
+			pthread_mutex_unlock(&mutex);
+
+			if(read(fifoLe, &estado, sizeof(int)) == -1){
+				perror("read:: Erro ao ler do arrumador.\n");
+			}
 			close(fifoLe);
 		}
 	}else{
@@ -207,6 +209,10 @@ int main(int argc, char *argv[]){
 	ticks = 0;
 
 	log_gerador = open("gerador.log",O_RDONLY | O_WRONLY | O_TRUNC, 0660);
+	if(log_gerador == -1){
+		perror("open:: Erro ao abrir o gerador.log\n");
+		exit(1);
+	}
 	char buffer[100] = "t(ticks) ; id_viat ; destin ; t_estacion ; t_vida ; observ\n";
 	write(log_gerador, buffer, strlen(buffer));
 

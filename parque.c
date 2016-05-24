@@ -83,7 +83,10 @@ void escreveLog(Veiculo *v, int estado){
 	}
 
 	sprintf(buffer,"%5d    ; %4d   ; %4d    ; %s\n", v->ticks_criacao, numVagasParque, v->id, bufferEstado);
-	write(log_parque, buffer, strlen(buffer));
+
+	if(write(log_parque, buffer, strlen(buffer)) == -1){
+		perror("write:: Erro ao escrever no parque.log");
+	}
 	strcpy(buffer, "");
 	strcpy(bufferEstado, "");
 }
@@ -94,12 +97,17 @@ void *arrumador(void *veiculo){
 	int fifoVeiculo, estado;
 
 	fifoVeiculo = open(v->fifo_viatura, O_WRONLY);
+	if(fifoVeiculo == -1){
+		perror("open:: Erro ao abrir fifo privado da viatura.\n");
+	}
 
 	pthread_mutex_lock(&mutex);
 	if(parque.aberto == P_ABERTO && numVagasParque > 0){
 		estado = V_ENTROU;
 		numVagasParque--;
-		write(fifoVeiculo, &estado, sizeof(int));
+		if(write(fifoVeiculo, &estado, sizeof(int)) == -1){
+			perror("write:: Erro ao escrever o estado no fifo privado da viatura.\n");
+		}
 		pthread_mutex_unlock(&mutex);
 
 		pthread_mutex_lock(&mutexFicheiro);
@@ -116,14 +124,16 @@ void *arrumador(void *veiculo){
 		pthread_mutex_unlock(&mutex);
 		estado = P_CHEIO;
 	}
-
-	write(fifoVeiculo, &estado, sizeof(int));
-
+	if(write(fifoVeiculo, &estado, sizeof(int)) == -1){
+		perror("write:: Erro ao escrever o estado no fifo privado da viatura.\n");
+	}
 	pthread_mutex_lock(&mutexFicheiro);
 	escreveLog(v, estado);
 	pthread_mutex_unlock(&mutexFicheiro);
 
-	close(fifoVeiculo);
+	if(close(fifoVeiculo) == -1){
+		perror("close:: Erro ao fechar o fifo privado da viatura.\n");
+	}
 
 	return NULL;
 }
@@ -135,16 +145,24 @@ void *entradaParqueNorte(void *arg){
 
 	fifo = open(FIFO_NORTE, O_RDONLY);
 
+	if(fifo == -1){
+		perror("open:: Erro ao abrir o fifo Norte.\n");
+	}
+
 	while(parque.aberto == P_ABERTO){
 		readF = read(fifo, v, sizeof(Veiculo));
 		if(v->id == -1){
 			break;
 		}else if(readF > 0){
-			pthread_create(&thr_arrumador, NULL, arrumador, v);
+			if(pthread_create(&thr_arrumador, NULL, arrumador, v) != 0){
+				perror("Parque:: Erro a criar thread 'arrumador'.");
+			}
 		}
 	}
 
-	close(fifo);
+	if(close(fifo) == -1){
+		perror("close:: Erro ao fechar o fifo Norte.\n");
+	}
 
 	return NULL;
 }
@@ -156,16 +174,24 @@ void *entradaParqueSul(void *arg){
 
 	fifo = open(FIFO_SUL, O_RDONLY);
 
+	if(fifo == -1){
+		perror("open:: Erro ao abrir o fifo Sul.\n");
+	}
 	while(parque.aberto == P_ABERTO){
 		readF = read(fifo, v, sizeof(Veiculo));
 		if(v->id == -1){
 			break;
 		}else if(readF > 0){
-			pthread_create(&thr_arrumador, NULL, arrumador, v);
+			if(pthread_create(&thr_arrumador, NULL, arrumador, v) != 0){
+				perror("Parque:: Erro a criar thread 'arrumador'.");
+			}
 		}
 	}
 
-	close(fifo);
+	if(close(fifo) == -1){
+		perror("close:: Erro ao fechar o fifo Sul.\n");
+	}
+
 
 	return NULL;
 }
@@ -177,16 +203,24 @@ void *entradaParqueEste(void *arg){
 
 	fifo = open(FIFO_ESTE, O_RDONLY);
 
+	if(fifo == -1){
+		perror("open:: Erro ao abrir o fifo Este.\n");
+	}
 	while(parque.aberto == P_ABERTO){
 		readF = read(fifo, v, sizeof(Veiculo));
 		if(v->id == -1){
 			break;
 		}else if(readF > 0){
-			pthread_create(&thr_arrumador, NULL, arrumador, v);
+			if(pthread_create(&thr_arrumador, NULL, arrumador, v) != 0){
+				perror("Parque:: Erro a criar thread 'arrumador'.");
+			}
 		}
 	}
 
-	close(fifo);
+	if(close(fifo) == -1){
+		perror("close:: Erro ao fechar o fifo Este.\n");
+	}
+
 
 	return NULL;
 }
@@ -198,16 +232,25 @@ void *entradaParqueOeste(void *arg){
 
 	fifo = open(FIFO_OESTE, O_RDONLY);
 
+	if(fifo == -1){
+		perror("open:: Erro ao abrir o fifo Oeste.\n");
+	}
 	while(parque.aberto == P_ABERTO){
 		readF = read(fifo, v, sizeof(Veiculo));
 		if(v->id == -1){
 			break;
 		}else if(readF > 0){
-			pthread_create(&thr_arrumador, NULL, arrumador, v);
+			if(pthread_create(&thr_arrumador, NULL, arrumador, v) != 0){
+				perror("Parque:: Erro a criar thread 'arrumador'.");
+			}
+
 		}
 	}
 
-	close(fifo);
+	if(close(fifo) == -1){
+		perror("close:: Erro ao fechar o fifo Oeste.\n");
+	}
+
 
 	return NULL;
 }
@@ -220,10 +263,18 @@ void fechaControladores(){
 }
 
 void *criarControladores(void *arg){
-	pthread_create(&thr_Norte, NULL, entradaParqueNorte, NULL);
-	pthread_create(&thr_Sul, NULL, entradaParqueSul, NULL);
-	pthread_create(&thr_Este, NULL, entradaParqueEste, NULL);
-	pthread_create(&thr_Oeste, NULL, entradaParqueOeste, NULL);
+	if(pthread_create(&thr_Norte, NULL, entradaParqueNorte, NULL) == -1){
+		perror("Parque:: Erro a criar thread controladora.\n");
+	}
+	if(pthread_create(&thr_Sul, NULL, entradaParqueSul, NULL) == -1){
+		perror("Parque:: Erro a criar thread controladora.\n");
+	}
+	if(pthread_create(&thr_Este, NULL, entradaParqueEste, NULL) == -1){
+		perror("Parque:: Erro a criar thread controladora.\n");
+	}
+	if(pthread_create(&thr_Oeste, NULL, entradaParqueOeste, NULL) == -1){
+		perror("Parque:: Erro a criar thread controladora.\n");
+	}
 
 	mkfifo(FIFO_NORTE, 0660);
 	mkfifo(FIFO_SUL, 0660);
@@ -256,7 +307,9 @@ int main(int argc, char *argv[]){
 	char buffer[100] = "t(ticks) ; nlug   ; id_viat ; observ\n";
 	write(log_parque, buffer, strlen(buffer));
 
-	pthread_create(&thr_principal, NULL, criarControladores, NULL);
+	if(pthread_create(&thr_principal, NULL, criarControladores, NULL) != 0){
+		perror("Parque:: Erro a criar thread principal.");
+	}
 
 	sleep(parque.t_abertura);
 	parque.aberto = P_FECHADO;

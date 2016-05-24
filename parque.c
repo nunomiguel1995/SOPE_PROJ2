@@ -53,39 +53,43 @@ pthread_t thr_Norte, thr_Sul, thr_Este, thr_Oeste;
 Parque parque;
 int numVagasParque;
 int log_parque;
+char buffer[TAMANHO_BUFFER];
+char bufferEstado[TAMANHO_BUFFER];
 
 void escreveLog(Veiculo *v, int estado){
-	char buffer[TAMANHO_BUFFER];
 
 	switch(estado){
 	case P_FECHADO:
-		sprintf(buffer,"%5d    ; %4d   ; %4d    ; encerrado\n", v->ticks_criacao, numVagasParque, v->id);
+		strcpy(bufferEstado, "encerrado");
 		break;
 	case P_CHEIO:
-		sprintf(buffer,"%5d    ; %4d   ; %4d    ; cheio!\n", v->ticks_criacao, numVagasParque, v->id);
+		strcpy(bufferEstado, "cheio!");
 		break;
 	case V_SAIU:
-		if(parque.aberto == 1){
-			sprintf(buffer,"%5d    ; %4d   ; %4d    ; saída\n", v->ticks_criacao + v->t_estacionamento, numVagasParque, v->id);
-		}else if(parque.aberto == 0){
-			sprintf(buffer,"%5d    ; %4d   ; %4d    ; encerrado\n", v->ticks_criacao + v->t_estacionamento, numVagasParque, v->id);
+		if(parque.aberto == P_ABERTO){
+			strcpy(bufferEstado, "saida");
+		}else if(parque.aberto == P_FECHADO){
+			strcpy(bufferEstado, "encerrado");
 		}
 		break;
 	case V_ENTROU:
-		sprintf(buffer,"%5d    ; %4d   ; %4d    ; entrada\n", v->ticks_criacao, numVagasParque, v->id);
+		strcpy(bufferEstado, "estacionamento");
 		break;
 	case V_ESTACIONA:
-		sprintf(buffer,"%5d    ; %4d   ; %4d    ; estacionamento\n", v->ticks_criacao, numVagasParque, v->id);
+		strcpy(bufferEstado, "estacionamento");
 		break;
 	default:
 		break;
 	}
 
+	sprintf(buffer,"%5d    ; %4d   ; %4d    ; %s\n", v->ticks_criacao, numVagasParque, v->id, bufferEstado);
 	write(log_parque, buffer, strlen(buffer));
 	strcpy(buffer, "");
+	strcpy(bufferEstado, "");
 }
 
 void *arrumador(void *veiculo){
+	pthread_detach(pthread_self());
 	Veiculo *v = (Veiculo *)veiculo;
 	int fifoVeiculo, estado;
 
@@ -208,7 +212,14 @@ void *entradaParqueOeste(void *arg){
 	return NULL;
 }
 
-void criarControladores(){
+void fechaControladores(){
+	pthread_join(thr_Norte, NULL);
+	pthread_join(thr_Sul, NULL);
+	pthread_join(thr_Este, NULL);
+	pthread_join(thr_Oeste, NULL);
+}
+
+void *criarControladores(void *arg){
 	pthread_create(&thr_Norte, NULL, entradaParqueNorte, NULL);
 	pthread_create(&thr_Sul, NULL, entradaParqueSul, NULL);
 	pthread_create(&thr_Este, NULL, entradaParqueEste, NULL);
@@ -218,22 +229,13 @@ void criarControladores(){
 	mkfifo(FIFO_SUL, 0660);
 	mkfifo(FIFO_ESTE, 0660);
 	mkfifo(FIFO_OESTE, 0660);
-}
 
-void fechaControladores(){
-	pthread_join(thr_Norte, NULL);
-	pthread_join(thr_Sul, NULL);
-	pthread_join(thr_Este, NULL);
-	pthread_join(thr_Oeste, NULL);
-
-	unlink(FIFO_NORTE);
-	unlink(FIFO_SUL);
-	unlink(FIFO_ESTE);
-	unlink(FIFO_OESTE);
+	pthread_exit(NULL);
 }
 
 int main(int argc, char *argv[]){
 	int fifoN, fifoS, fifoE, fifoO;
+	pthread_t thr_principal;
 
 	if(argc != 3){
 		perror("Numero errado de argumentos. Utilize ./parque <N_LUGARES> <T_ABERTURA>\n");
@@ -250,11 +252,11 @@ int main(int argc, char *argv[]){
 	v.t_estacionamento = 0;
 	strcpy(v.fifo_entrada,"fim");
 
-	log_parque = open("parque.log", O_WRONLY | O_CREAT, 0660);
+	log_parque = open("parque.log", O_RDONLY | O_WRONLY | O_TRUNC, 0660);
 	char buffer[100] = "t(ticks) ; nlug   ; id_viat ; observ\n";
 	write(log_parque, buffer, strlen(buffer));
 
-	criarControladores();
+	pthread_create(&thr_principal, NULL, criarControladores, NULL);
 
 	sleep(parque.t_abertura);
 	parque.aberto = P_FECHADO;
@@ -272,9 +274,14 @@ int main(int argc, char *argv[]){
 	close(fifoE);
 	close(fifoO);
 
+	unlink(FIFO_NORTE);
+	unlink(FIFO_SUL);
+	unlink(FIFO_ESTE);
+	unlink(FIFO_OESTE);
+
 	fechaControladores();
 
 	close(log_parque);
 
-	pthread_exit(NULL);
+	exit(0);
 }

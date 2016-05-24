@@ -34,6 +34,8 @@
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 int id_veiculo = 1, ticks;
 int log_gerador;
+char bufferEstado[TAMANHO_BUFFER];
+char buffer[TAMANHO_BUFFER];
 
 typedef struct{
 	char direcao;
@@ -46,34 +48,45 @@ typedef struct{
 }Veiculo;
 
 void escreveLog(Veiculo *v, int estado){
-	char buffer[TAMANHO_BUFFER];
-
 	switch(estado){
 	case P_FECHADO:
-		sprintf(buffer,"%5d    ;  %4d   ; %4c   ; %6d     ;    ?   ;  encerrado\n", v->ticks_criacao, v->id, v->direcao, v->t_estacionamento);
+		strcpy(bufferEstado, "encerrado");
 		break;
 	case P_CHEIO:
-		sprintf(buffer,"%5d    ;  %4d   ; %4c   ; %6d     ;    ?   ;  cheio\n", v->ticks_criacao, v->id, v->direcao, v->t_estacionamento);
+		strcpy(bufferEstado, "cheio!");
 		break;
 	case V_SAIU:
-		sprintf(buffer,"%5d    ;  %4d   ; %4c   ; %6d     ; %4d   ;  saída\n", v->ticks_criacao + v->t_estacionamento, v->id, v->direcao, v->t_estacionamento, (ticks - v->ticks_criacao + v->t_estacionamento));
+		strcpy(bufferEstado, "saida");
 		break;
 	case V_ENTROU:
-		sprintf(buffer,"%5d    ;  %4d   ; %4c   ; %6d     ;    ?   ;  estacionamento\n", v->ticks_criacao, v->id, v->direcao, v->t_estacionamento);
+		strcpy(bufferEstado, "estacionamento");
+		break;
+	case V_ESTACIONA:
+		strcpy(bufferEstado, "estacionamento");
 		break;
 	default:
 		break;
 	}
 
+	if(estado == V_SAIU){
+		sprintf(buffer,"%5d    ;  %4d   ; %4c   ; %6d     ; %4d   ;  %s\n", (v->ticks_criacao + v->t_estacionamento), v->id, v->direcao, v->t_estacionamento, (ticks - v->ticks_criacao + v->t_estacionamento),bufferEstado);
+	}else{
+		sprintf(buffer,"%5d    ;  %4d   ; %4c   ; %6d     ;    ?   ;  %s\n", v->ticks_criacao, v->id, v->direcao, v->t_estacionamento, bufferEstado);
+	}
+
 	write(log_gerador, buffer, strlen(buffer));
 	strcpy(buffer, "");
+	strcpy(bufferEstado, "");
 }
 
 void *enviaVeiculo(void *veiculo){
+	pthread_detach(pthread_self());
 	Veiculo v = *(Veiculo *)veiculo;
 	int fifoEscreve, fifoLe, estado = 0;
 
-	mkfifo(v.fifo_viatura, 0660);
+	if(mkfifo(v.fifo_viatura, 0660) == -1){
+		perror("mkfifo:: Erro ao criar fifo.\n");
+	}
 
 	fifoEscreve = open(v.fifo_entrada, O_WRONLY | O_NONBLOCK);
 
@@ -85,9 +98,14 @@ void *enviaVeiculo(void *veiculo){
 		if(fifoLe != -1){
 			read(fifoLe, &estado, sizeof(int));
 
-			pthread_mutex_lock(&mutex);
-			escreveLog(&v, estado);
-			pthread_mutex_unlock(&mutex);
+			if(pthread_mutex_lock(&mutex) == -1){
+				perror("mutex_lock::Erro ao trancar mutex.\n");
+			}else{
+				escreveLog(&v, estado);
+			}
+			if(pthread_mutex_unlock(&mutex) == -1){
+				perror("mutex_unlock::Erro ao destrancar mutex.\n");
+			}
 
 			read(fifoLe, &estado, sizeof(int));
 			close(fifoLe);
@@ -101,6 +119,7 @@ void *enviaVeiculo(void *veiculo){
 	pthread_mutex_unlock(&mutex);
 
 	unlink(v.fifo_viatura);
+
 	return NULL;
 }
 
@@ -187,7 +206,7 @@ int main(int argc, char *argv[]){
 
 	ticks = 0;
 
-	log_gerador = open("gerador.log", O_WRONLY | O_CREAT, 0660);
+	log_gerador = open("gerador.log",O_RDONLY | O_WRONLY | O_TRUNC, 0660);
 	char buffer[100] = "t(ticks) ; id_viat ; destin ; t_estacion ; t_vida ; observ\n";
 	write(log_gerador, buffer, strlen(buffer));
 
